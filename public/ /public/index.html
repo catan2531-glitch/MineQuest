@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ULTRA GAME</title>
+</head>
+
+<body style="background:#0a0a0a;color:#0f0;text-align:center">
+
+<h1>🔥 ULTRA GAME SERVER</h1>
+
+<input id="id" placeholder="ID">
+<button onclick="login()">LOGIN</button>
+
+<hr>
+
+<button onclick="mine()">⛏ MINE</button>
+<button onclick="shop()">🛒 SHOP</button>
+
+<p>💎 GEM: <span id="gem">0</span></p>
+<p>💰 COIN: <span id="coin">0</span></p>
+<p>⭐ LEVEL: <span id="level">1</span></p>
+
+<hr>
+
+<button onclick="top()">TOP</button>
+<div id="top"></div>
+
+<script>
+
+let token="";
+
+async function login(){
+  let id=document.getElementById("id").value;
+
+  let r=await fetch("/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id})
+  });
+
+  let d=await r.json();
+
+  token=d.token;
+  show(d.user);
+}
+
+async function mine(){
+  let r=await fetch("/mine",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token})
+  });
+
+  let d=await r.json();
+  if(d.error) return alert(d.error);
+  show(d);
+}
+
+async function shop(){
+  let r=await fetch("/shop",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token})
+  });
+
+  let d=await r.json();
+  if(d.error) return alert(d.error);
+  show(d);
+}
+
+async function top(){
+  let r=await fetch("/top");
+  let d=await r.json();
+
+  top.innerHTML = d.map(u=>`<p>${u.id} - ${u.coin} (Lv${u.level})</p>`).join("");
+}
+
+function show(d){
+  gem.innerText=d.gem||0;
+  coin.innerText=d.coin||0;
+  level.innerText=d.level||1;
+}
+
+</script>
+
+</body>
+</html>

@@ -12,42 +12,48 @@ function getUser(id) {
   return users[id];
 }
 
+// 🎮 SẢNH CHÍNH
 bot.start((ctx) => {
   const u = getUser(ctx.from.id);
 
   ctx.reply(
-`🎮 BOT GAME
+`🎮 SẢNH CHÍNH
 
 💰 Tiền: ${u.money}
-💎 Kim cương: ${u.diamond}
-
-Lệnh:
-/daily - nhận quà
-/balance - xem ví`
-  );
+💎 Kim cương: ${u.diamond}`,
+{
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "💎 Sảnh Gem", callback_data: "gem" }],
+        [{ text: "💰 Nhận quà", callback_data: "daily" }],
+        [{ text: "📊 Xem ví", callback_data: "balance" }]
+      ]
+    }
+  });
 });
 
-bot.command("daily", (ctx) => {
+// 💎 xử lý nút bấm
+bot.on("callback_query", (ctx) => {
+  const data = ctx.callbackQuery.data;
   const u = getUser(ctx.from.id);
 
-  const money = Math.floor(Math.random() * 500) + 100;
-  const diamond = Math.floor(Math.random() * 3);
+  if (data === "gem") {
+    ctx.reply("💎 Chào mừng đến Sảnh Gem!");
+  }
 
-  u.money += money;
-  u.diamond += diamond;
+  if (data === "daily") {
+    const money = Math.floor(Math.random() * 500) + 100;
+    const diamond = Math.floor(Math.random() * 3);
 
-  ctx.reply(`🎁 Nhận +${money}💰 +${diamond}💎`);
-});
+    u.money += money;
+    u.diamond += diamond;
 
-bot.command("balance", (ctx) => {
-  const u = getUser(ctx.from.id);
+    ctx.reply(`🎁 Nhận +${money}💰 +${diamond}💎`);
+  }
 
-  ctx.reply(
-`📊 VÍ CỦA BẠN
-
-💰 ${u.money}
-💎 ${u.diamond}`
-  );
+  if (data === "balance") {
+    ctx.reply(`📊 Ví của bạn\n💰 ${u.money}\n💎 ${u.diamond}`);
+  }
 });
 
 bot.launch();

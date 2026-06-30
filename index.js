@@ -1,162 +1,123 @@
+const express = require("express");
+const jwt = require("jsonwebtoken");
 const { Telegraf } = require("telegraf");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
+app.use(express.json());
+app.use(express.static("public"));
 
-// ===== DATA =====
-const users = {};
-const cd = {};
-const invitedBy = {};
+const SECRET = "ultra_secret_key";
 
-// ===== USER =====
-function getUser(id){
+// ===== DATABASE (fake but persistent in RAM) =====
+let users = {};
+let cooldown = {};
+
+// ===== TOKEN CREATE =====
+function createToken(id){
+  return jwt.sign({id}, SECRET, {expiresIn:"1d"});
+}
+
+// ===== VERIFY =====
+function auth(req,res,next){
+  try{
+    let token = req.body.token;
+    let data = jwt.verify(token, SECRET);
+    req.userId = data.id;
+    next();
+  }catch(e){
+    res.json({error:"invalid token"});
+  }
+}
+
+// ===== LOGIN =====
+app.post("/login",(req,res)=>{
+  let id = req.body.id;
+
   if(!users[id]){
     users[id] = {
-      money:0,
-      diamond:0,
-      bank:0,
-      level:1,
-      exp:0
+      coin:0,
+      gem:0,
+      power:1
     };
   }
-  return users[id];
-}
 
-// ===== LEVEL =====
-function addExp(u,xp){
-  u.exp += xp;
-  if(u.exp >= u.level * 100){
-    u.exp = 0;
-    u.level++;
-    return true;
+  res.json({
+    token: createToken(id),
+    data: users[id]
+  });
+});
+
+// ===== MINE ULTRA =====
+app.post("/mine",auth,(req,res)=>{
+  let id = req.userId;
+
+  if(!users[id]) return res.json({error:"no user"});
+
+  let now = Date.now();
+  if(cooldown[id] && now - cooldown[id] < 800){
+    return res.json({error:"cooldown"});
   }
-  return false;
-}
 
-// ===== START =====
+  cooldown[id] = now;
+
+  let u = users[id];
+
+  let gain = Math.floor(Math.random()*u.power)+1;
+
+  u.gem += gain;
+  u.coin += gain * 5;
+
+  res.json(u);
+});
+
+// ===== SHOP =====
+app.post("/shop",auth,(req,res)=>{
+  let id = req.userId;
+  let u = users[id];
+
+  if(u.coin >= 500){
+    u.coin -= 500;
+    u.power += 1;
+    return res.json({msg:"POWER UP!",u});
+  }
+
+  res.json({error:"not enough coin"});
+});
+
+// ===== TOP =====
+app.get("/top",(req,res)=>{
+  let arr = Object.entries(users).map(([id,u])=>({
+    id,
+    coin:u.coin
+  }));
+
+  arr.sort((a,b)=>b.coin-a.coin);
+
+  res.json(arr.slice(0,10));
+});
+
+// ===== BOT =====
+const bot = new Telegraf(process.env.BOT_TOKEN);
+
 bot.start((ctx)=>{
-  const id = ctx.from.id;
-  const u = getUser(id);
-
-  const args = ctx.message.text.split(" ");
-
-  // REF SYSTEM
-  if(args[1] && !invitedBy[id]){
-    const ref = args[1].replace("REF","");
-    const owner = getUser(ref);
-
-    if(ref && ref != id){
-      owner.money += 200;
-      u.money += 100;
-      invitedBy[id] = ref;
-    }
-  }
-
-  ctx.reply(
-`🎮 VIP GAME FULL
-
-💰 ${u.money}
-🏦 ${u.bank}
-💎 ${u.diamond}
-⭐ Lv ${u.level}
-
-🔗 Link mời:
-https://t.me/${ctx.botInfo.username}?start=REF${id}
-
-⛏ /mine
-💸 /withdraw <số>
-🏦 /bank deposit|withdraw <số>`
-  );
+  ctx.reply("🔥 ULTRA GOD MODE BOT ONLINE");
 });
 
-// ===== MINE =====
 bot.command("mine",(ctx)=>{
-  const id = ctx.from.id;
-  const u = getUser(id);
+  let id = ctx.from.id;
 
-  if(cd[id] && Date.now() - cd[id] < 4000){
-    return ctx.reply("⏳ chờ 4s");
+  if(!users[id]){
+    users[id]={coin:0,gem:0,power:1};
   }
 
-  let money = Math.floor(Math.random()*300)+80;
-  let diamond = Math.random()<0.3?1:0;
-  let xp = Math.floor(Math.random()*10)+5;
+  users[id].gem++;
+  users[id].coin += 10;
 
-  u.money += money;
-  u.diamond += diamond;
-
-  let up = addExp(u,xp);
-
-  cd[id] = Date.now();
-
-  ctx.reply(
-`⛏ ĐÀO
-
-+${money}💰
-+${diamond}💎
-+${xp} EXP
-${up ? "🔥 LEVEL UP!" : ""}`
-  );
-});
-
-// ===== WITHDRAW =====
-bot.command("withdraw",(ctx)=>{
-  const u = getUser(ctx.from.id);
-  const amount = Number(ctx.message.text.split(" ")[1]);
-
-  if(!amount || isNaN(amount)){
-    return ctx.reply("❌ /withdraw <số>");
-  }
-
-  if(amount < 5000) return ctx.reply("❌ Min 5000");
-  if(amount > 1000000) return ctx.reply("❌ Max 1M");
-  if(u.money < amount) return ctx.reply("❌ Không đủ tiền");
-
-  u.money -= amount;
-
-  ctx.reply(`💸 RÚT ${amount}💰`);
-});
-
-// ===== BANK =====
-bot.command("bank",(ctx)=>{
-  const u = getUser(ctx.from.id);
-  const a = ctx.message.text.split(" ");
-
-  if(a[1] === "deposit"){
-    let x = Number(a[2]);
-    if(u.money < x) return ctx.reply("❌ thiếu tiền");
-
-    u.money -= x;
-    u.bank += x;
-
-    return ctx.reply(`🏦 gửi ${x}`);
-  }
-
-  if(a[1] === "withdraw"){
-    let x = Number(a[2]);
-    if(u.bank < x) return ctx.reply("❌ thiếu bank");
-
-    u.bank -= x;
-    u.money += x;
-
-    return ctx.reply(`💸 rút ${x}`);
-  }
-
-  ctx.reply("🏦 bank deposit/withdraw <số>");
-});
-
-// ===== BALANCE =====
-bot.command("balance",(ctx)=>{
-  const u = getUser(ctx.from.id);
-
-  ctx.reply(
-`📊 VÍ
-
-💰 ${u.money}
-🏦 ${u.bank}
-💎 ${u.diamond}
-⭐ Lv ${u.level}`
-  );
+  ctx.reply(`⛏ +1 gem | 💰 ${users[id].coin}`);
 });
 
 bot.launch();
-console.log("🔥 VIP GAME FULL RUNNING");
+
+app.listen(process.env.PORT || 3000,()=>{
+  console.log("🚀 ULTRA GOD MODE RUN");
+});

@@ -1,138 +1,148 @@
 const { Telegraf } = require("telegraf");
-
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// ===== DATA =====
 const users = {};
-const lastDaily = {};
-const withdrawCooldown = {};
+const cd = {};
 
-const MIN_WITHDRAW = 1000;
-
-// ===== USER =====
-function getUser(id) {
-  if (!users[id]) {
+function getUser(id){
+  if(!users[id]){
     users[id] = {
-      money: 0,
-      diamond: 0,
-      level: 1,
-      exp: 0
+      money:0,
+      diamond:0,
+      bank:0,
+      level:1,
+      exp:0
     };
   }
   return users[id];
 }
 
-// ===== LEVEL UP =====
-function addExp(user, amount) {
-  user.exp += amount;
-
-  if (user.exp >= user.level * 100) {
-    user.exp = 0;
-    user.level += 1;
+function addExp(u,xp){
+  u.exp += xp;
+  if(u.exp >= u.level*100){
+    u.exp = 0;
+    u.level++;
     return true;
   }
   return false;
 }
 
 // ===== START =====
-bot.start((ctx) => {
+bot.start((ctx)=>{
   const u = getUser(ctx.from.id);
 
-  ctx.replyWithPhoto(
-    "https://i.imgur.com/your-image.jpg",
-    {
-      caption: `🔥 SẢNH SIÊU VIP
+  ctx.reply(
+`🎮 NVIP GAME
 
-💰 Tiền: ${u.money}
-💎 Kim cương: ${u.diamond}
-⭐ Level: ${u.level}
-📈 EXP: ${u.exp}/${u.level * 100}`,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "💎 Sảnh Gem", callback_data: "gem" }],
-          [{ text: "💰 Nhận quà", callback_data: "daily" }],
-          [{ text: "📊 Ví", callback_data: "balance" }]
-        ]
-      }
-    }
+💰 ${u.money}
+🏦 ${u.bank}
+💎 ${u.diamond}
+⭐ Lv ${u.level}
+
+⛏ /mine
+🏦 /bank deposit <số>
+🏦 /bank withdraw <số>
+💸 /withdraw <số>
+🌐 web: mở file index.html`
   );
 });
 
-// ===== BUTTONS =====
-bot.on("callback_query", (ctx) => {
-  const id = ctx.from.id;
-  const u = getUser(id);
-  const data = ctx.callbackQuery.data;
+// ===== MINE =====
+bot.command("mine",(ctx)=>{
+  const u = getUser(ctx.from.id);
 
-  if (data === "gem") {
-    return ctx.reply("💎 Shop sắp mở (VIP system)");
+  if(cd[ctx.from.id] && Date.now()-cd[ctx.from.id]<4000){
+    return ctx.reply("⏳ chờ 4s");
   }
 
-  if (data === "daily") {
-    const now = Date.now();
+  let m = Math.floor(Math.random()*300)+80;
+  let d = Math.random()<0.3?1:0;
 
-    if (lastDaily[id] && now - lastDaily[id] < 24 * 60 * 60 * 1000) {
-      return ctx.reply("⏳ Bạn đã nhận hôm nay rồi");
-    }
+  u.money += m;
+  u.diamond += d;
 
-    const money = Math.floor(Math.random() * 700) + 200;
-    const diamond = Math.floor(Math.random() * 5);
-    const exp = Math.floor(Math.random() * 20) + 10;
+  let up = addExp(u,10);
 
-    u.money += money;
-    u.diamond += diamond;
+  cd[ctx.from.id]=Date.now();
 
-    const leveled = addExp(u, exp);
-    lastDaily[id] = now;
-
-    return ctx.reply(
-`🎁 +${money}💰 +${diamond}💎
-📈 +${exp} EXP${leveled ? "\n🔥 LEVEL UP!" : ""}`
-    );
-  }
-
-  if (data === "balance") {
-    return ctx.reply(`📊 VÍ VIP
-
-💰 ${u.money}
-💎 ${u.diamond}
-⭐ Level: ${u.level}
-📈 EXP: ${u.exp}/${u.level * 100}`);
-  }
+  ctx.reply(`⛏ +${m}💰 +${d}💎 ${up?"🔥LV UP":""}`);
 });
 
-// ===== WITHDRAW VIP =====
-bot.command("withdraw", (ctx) => {
-  const id = ctx.from.id;
-  const u = getUser(id);
-
-  const now = Date.now();
-
-  if (withdrawCooldown[id] && now - withdrawCooldown[id] < 10000) {
-    const wait = Math.ceil((10000 - (now - withdrawCooldown[id])) / 1000);
-    return ctx.reply(`⏳ Chờ ${wait}s`);
-  }
-
+// ===== WITHDRAW =====
+bot.command("withdraw",(ctx)=>{
+  const u = getUser(ctx.from.id);
   const amount = Number(ctx.message.text.split(" ")[1]);
 
-  if (!amount || isNaN(amount)) {
-    return ctx.reply("❌ /withdraw <số tiền>");
-  }
-
-  if (amount < MIN_WITHDRAW) {
-    return ctx.reply(`❌ Min rút ${MIN_WITHDRAW}`);
-  }
-
-  if (u.money < amount) {
-    return ctx.reply("❌ Không đủ tiền");
-  }
+  if(!amount || amount<5000) return ctx.reply("❌ min 5000");
+  if(amount>1000000) return ctx.reply("❌ max 1M");
+  if(u.money<amount) return ctx.reply("❌ thiếu tiền");
 
   u.money -= amount;
-  withdrawCooldown[id] = now;
 
-  ctx.reply(`💸 RÚT VIP THÀNH CÔNG\n-${amount}💰`);
+  ctx.reply(`💸 rút ${amount}`);
 });
 
-// ===== RUN =====
-bot.launch();
-console.log("🔥 VIP BOT RUNNING");
+// ===== BANK =====
+bot.command("bank",(ctx)=>{
+  const u = getUser(ctx.from.id);
+  const a = ctx.message.text.split(" ");
+
+  if <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NVIP MINER</title>
+<style>
+body{background:#111;color:#fff;text-align:center;font-family:Arial}
+button{padding:15px;background:gold;border:none;border-radius:10px;margin:5px}
+</style>
+</head>
+
+<body>
+
+<h1>⛏ NVIP MINER 💎</h1>
+
+💰 <span id="money">0</span><br>
+💎 <span id="diamond">0</span><br>
+⭐ Lv <span id="level">1</span>
+
+<br><br>
+
+<button onclick="mine()">⛏ ĐÀO</button>
+
+<script>
+let data = {
+  money:0,
+  diamond:0,
+  level:1,
+  exp:0
+};
+
+function update(){
+  money.innerText=data.money;
+  diamond.innerText=data.diamond;
+  level.innerText=data.level;
+}
+
+function mine(){
+  let m = Math.floor(Math.random()*300)+80;
+  let d = Math.random()<0.3?1:0;
+
+  data.money += m;
+  data.diamond += d;
+
+  data.exp += 10;
+  if(data.exp>50){
+    data.level++;
+    data.exp=0;
+    alert("🔥 LEVEL UP");
+  }
+
+  update();
+}
+
+update();
+</script>
+
+</body>
+</html>

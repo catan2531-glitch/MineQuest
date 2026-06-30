@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MINING UPGRADE</title>
+
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  background:#0b1a0b;
+  color:#00ff66;
+}
+
+button{
+  padding:12px;
+  margin:5px;
+  background:#2ecc71;
+  border:none;
+  font-weight:bold;
+}
+
+.box{
+  margin-top:30px;
+}
+
+.big{
+  font-size:40px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⛏ MINING UPGRADE</h1>
+
+<div class="box">
+  <div class="big">💰 <span id="money">0</span> VND</div>
+
+  <p>🪨 Than: <span id="coal">0</span></p>
+  <p>💎 Kim cương: <span id="diamond">0</span></p>
+  <p>💚 Ngọc lục: <span id="emerald">0</span></p>
+
+  <button onclick="mine()">⛏ ĐÀO MỎ</button>
+  <button onclick="spin()">🎰 QUAY</button>
+  <button onclick="saveGame()">💾 SAVE</button>
+  <button onclick="resetGame()">🗑 RESET</button>
+</div>
+
+<script>
+
+// ===== LOAD DATA =====
+let data = JSON.parse(localStorage.getItem("mine_game")) || {
+  money:0,
+  coal:0,
+  diamond:0,
+  emerald:0
+};
+
+function update(){
+  money.innerText = data.money;
+  coal.innerText = data.coal;
+  diamond.innerText = data.diamond;
+  emerald.innerText = data.emerald;
+}
+
+function mine(){
+
+  let r = Math.random();
+
+  if(r < 0.7){
+    data.coal++;
+    data.money += 10;
+    alert("🪨 +Than +10₫");
+  }
+  else if(r < 0.95){
+    data.diamond++;
+    data.money += 100;
+    alert("💎 +Kim cương +100₫");
+  }
+  else{
+    data.emerald++;
+    data

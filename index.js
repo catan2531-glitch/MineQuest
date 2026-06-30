@@ -6,118 +6,117 @@ const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-const SECRET = "ultra_secret_key";
+const SECRET = "ULTRA_SECRET_999";
 
-// ===== DATABASE (fake but persistent in RAM) =====
+// ================= DATABASE =================
 let users = {};
 let cooldown = {};
 
-// ===== TOKEN CREATE =====
-function createToken(id){
-  return jwt.sign({id}, SECRET, {expiresIn:"1d"});
-}
-
-// ===== VERIFY =====
-function auth(req,res,next){
-  try{
-    let token = req.body.token;
-    let data = jwt.verify(token, SECRET);
-    req.userId = data.id;
-    next();
-  }catch(e){
-    res.json({error:"invalid token"});
+// ================= USER CREATE =================
+function getUser(id){
+  if(!users[id]){
+    users[id] = {
+      coin: 0,
+      gem: 0,
+      power: 1,
+      level: 1
+    };
   }
+  return users[id];
 }
 
-// ===== LOGIN =====
+// ================= LOGIN =================
 app.post("/login",(req,res)=>{
   let id = req.body.id;
 
-  if(!users[id]){
-    users[id] = {
-      coin:0,
-      gem:0,
-      power:1
-    };
-  }
+  let token = jwt.sign({id}, SECRET, {expiresIn:"1d"});
+  let u = getUser(id);
 
-  res.json({
-    token: createToken(id),
-    data: users[id]
-  });
+  res.json({token, user:u});
 });
 
-// ===== MINE ULTRA =====
-app.post("/mine",auth,(req,res)=>{
-  let id = req.userId;
+// ================= AUTH =================
+function auth(req,res,next){
+  try{
+    let data = jwt.verify(req.body.token, SECRET);
+    req.id = data.id;
+    next();
+  }catch(e){
+    return res.json({error:"invalid token"});
+  }
+}
 
-  if(!users[id]) return res.json({error:"no user"});
+// ================= MINE SYSTEM =================
+app.post("/mine",auth,(req,res)=>{
+  let id = req.id;
+  let u = getUser(id);
 
   let now = Date.now();
-  if(cooldown[id] && now - cooldown[id] < 800){
+  if(cooldown[id] && now - cooldown[id] < 700){
     return res.json({error:"cooldown"});
   }
-
   cooldown[id] = now;
 
-  let u = users[id];
-
-  let gain = Math.floor(Math.random()*u.power)+1;
+  let gain = Math.floor(Math.random() * u.power) + 1;
 
   u.gem += gain;
   u.coin += gain * 5;
 
+  u.level = Math.floor(u.coin / 1000) + 1;
+
   res.json(u);
 });
 
-// ===== SHOP =====
+// ================= SHOP =================
 app.post("/shop",auth,(req,res)=>{
-  let id = req.userId;
-  let u = users[id];
+  let id = req.id;
+  let u = getUser(id);
 
-  if(u.coin >= 500){
-    u.coin -= 500;
-    u.power += 1;
-    return res.json({msg:"POWER UP!",u});
+  if(u.coin < 500){
+    return res.json({error:"not enough coin"});
   }
 
-  res.json({error:"not enough coin"});
+  u.coin -= 500;
+  u.power += 1;
+
+  res.json(u);
 });
 
-// ===== TOP =====
+// ================= TOP =================
 app.get("/top",(req,res)=>{
   let arr = Object.entries(users).map(([id,u])=>({
     id,
-    coin:u.coin
+    coin:u.coin,
+    level:u.level
   }));
 
-  arr.sort((a,b)=>b.coin-a.coin);
+  arr.sort((a,b)=>b.coin - a.coin);
 
   res.json(arr.slice(0,10));
 });
 
-// ===== BOT =====
+// ================= BOT =================
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx)=>{
-  ctx.reply("🔥 ULTRA GOD MODE BOT ONLINE");
+  let id = ctx.from.id;
+  getUser(id);
+  ctx.reply("🔥 ULTRA SERVER ONLINE");
 });
 
 bot.command("mine",(ctx)=>{
   let id = ctx.from.id;
+  let u = getUser(id);
 
-  if(!users[id]){
-    users[id]={coin:0,gem:0,power:1};
-  }
+  u.gem += 1;
+  u.coin += 10;
 
-  users[id].gem++;
-  users[id].coin += 10;
-
-  ctx.reply(`⛏ +1 gem | 💰 ${users[id].coin}`);
+  ctx.reply(`⛏ +1 gem | 💰 ${u.coin}`);
 });
 
 bot.launch();
 
+// ================= SERVER =================
 app.listen(process.env.PORT || 3000,()=>{
-  console.log("🚀 ULTRA GOD MODE RUN");
+  console.log("🚀 ULTRA SERVER RUNNING");
 });

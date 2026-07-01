@@ -1,5 +1,5 @@
 vuadaoquang/
-├── index.js          # Backend + Bot
-├── package.json      # Thông tin dự án
+├── package.json
+├── index.js
 └── views/
-    └── index.html    # Giao diện đầy đủ
+    └── index.html

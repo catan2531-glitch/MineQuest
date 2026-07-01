@@ -1,41 +1,70 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const { Telegraf } = require("telegraf");
 
+// ===============const { Telegraf } = require('telegraf');
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+const path = require('path');
+
+// === Cấu hình ===
+const BOT_TOKEN = 'Điền_TOKEN_BOT_của_bạn_đây';
 const app = express();
-app.use(express.json());
-app.use(express.static("public"));
+const bot = new Telegraf(BOT_TOKEN);
+const db = new sqlite3.Database('./data.db');
 
-const SECRET = "ULTRA_SECRET_999";
+// === Khởi tạo CSDL ===
+db.run(`CREATE TABLE IF NOT EXISTS users (
+  uid INTEGER PRIMARY KEY,
+  name TEXT,
+  join_date TEXT,
+  quang REAL DEFAULT 0,
+  diem INTEGER DEFAULT 0,
+  cap INTEGER DEFAULT 1,
+  ref_count INTEGER DEFAULT 0,
+  referred_by INTEGER DEFAULT NULL
+)`);
 
-// ================= DATABASE =================
-let users = {};
-let cooldown = {};
+// === Middleware ===
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'views')));
 
-// ================= USER CREATE =================
-function getUser(id){
-  if(!users[id]){
-    users[id] = {
-      coin: 0,
-      gem: 0,
-      power: 1,
-      level: 1
-    };
-  }
-  return users[id];
-}
-
-// ================= LOGIN =================
-app.post("/login",(req,res)=>{
-  let id = req.body.id;
-
-  let token = jwt.sign({id}, SECRET, {expiresIn:"1d"});
-  let u = getUser(id);
-
-  res.json({token, user:u});
+// === Route giao diện ===
+app.get('/game/:uid', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
-// ================= AUTH =================
+// === Xử lý Bot Telegram ===
+bot.start(async (ctx) => {
+  const uid = ctx.from.id;
+  const name = ctx.from.first_name;
+  const ref = ctx.startPayload;
+
+  // Thêm người dùng mới nếu chưa có
+  db.get(`SELECT * FROM users WHERE uid = ?`, [uid], (err, row) => {
+    if (!row) {
+      db.run(`INSERT INTO users (uid, name, join_date, referred_by) VALUES (?, ?, ?, ?)`,
+        [uid, name, new Date().toLocaleDateString(), ref || null]);
+      // Cộng thưởng cho người giới thiệu
+      if (ref) {
+        db.run(`UPDATE users SET ref_count = ref_count + 1, quang = quang + 500, diem = diem + 5 WHERE uid = ?`, [ref]);
+      }
+    }
+  });
+
+  // Gửi nút vào trò chơi
+  ctx.reply(`👋 Chào ${name}! Chào mừng đến Vua Đào Quặng!\n\n💰 Tích lũy quặng, nâng cấp máy, nhận thưởng mỗi ngày!`, {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🎮 Vào Trò Chơi", web_app: { url: `https://tên-máy-chủ-của-bạn.com/game/${uid}` } }]]
+    }
+  });
+});
+
+// === Khởi chạy ===
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server chạy cổng ${PORT}`));
+bot.launch();
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+= AUTH =================
 function auth(req,res,next){
   try{
     let data = jwt.verify(req.body.token, SECRET);

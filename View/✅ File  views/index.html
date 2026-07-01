@@ -6,101 +6,41 @@
   <title>Vua Đào Quặng</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <script>
-    tailwind.config = { theme: { extend: { colors: { dark: '#12121F', dark2: '#1E1E2F', blue: '#2563EB', gold: '#F59E0B' } } } }
-  </script>
+  <script>tailwind.config = {theme:{extend:{colors:{dark:'#12121F',dark2:'#1E1E2F',blue:'#2563EB',gold:'#F59E0B'}}}}}</script>
+  <style>.tab{flex:1;padding:12px;text-align:center;color:#9CA3AF;}.tab.active{color:#3B82F6;font-weight:bold;border-bottom:2px solid #3B82F6;}</style>
 </head>
 <body class="bg-dark text-white max-w-md mx-auto min-h-screen">
-  <!-- Header -->
-  <div class="p-4 flex justify-between items-center bg-dark2 border-b border-gray-700 sticky top-0">
-    <div><h3 class="font-bold">Duc</h3><p class="text-xs text-gray-400">UID: <span id="user-uid">6954064633</span></p></div>
-    <div class="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-lg">
-      <span class="text-gold font-bold text-lg" id="quang-tong">2469</span>
-      <i class="fa fa-coins text-gold"></i>
-    </div>
-  </div>
 
-  <!-- Tab -->
-  <div class="flex bg-dark2 border-b border-gray-700">
-    <button class="tab active" data-tab="profile">Hồ sơ</button>
-    <button class="tab" data-tab="mine">Máy đào</button>
-    <button class="tab" data-tab="spin">Giải trí</button>
-    <button class="tab" data-tab="ref">Mời bạn</button>
-    <button class="tab" data-tab="shop">Cửa hàng</button>
-  </div>
+<div class="p-4 flex justify-between items-center bg-dark2 border-b">
+  <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-blue flex items-center justify-center font-bold">Đ</div><div><h3 class="font-bold">Duc</h3><p class="text-xs text-gray-400">UID: 6954064633</p></div></div>
+  <div class="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-lg"><span class="text-gold font-bold">2.469</span><i class="fa fa-coins text-gold"></i></div>
+</div>
 
-  <!-- Nội dung Hồ sơ -->
-  <div id="tab-profile" class="p-4">
-    <div class="bg-dark2 rounded-xl p-4 mb-4 grid grid-cols-2 gap-y-2 text-sm">
-      <span class="text-gray-300">Tên:</span><span class="text-right">Duc</span>
-      <span class="text-gray-300">Ngày tham gia:</span><span class="text-right">29/6/2026</span>
-    </div>
-    <div class="bg-dark2 rounded-xl p-6 text-center mb-4">
-      <p class="text-gray-300">Số dư quặng</p>
-      <p class="text-4xl font-bold text-gold">0 <span class="text-lg">QUẶNG</span></p>
-    </div>
-    <div class="grid grid-cols-3 gap-3 mb-4">
-      <div class="bg-dark2 p-3 rounded text-center"><p class="text-sm">Cấp</p><p class="text-red-400 font-bold">Lv.1</p></div>
-      <div class="bg-dark2 p-3 rounded text-center"><p class="text-sm">Điểm</p><p class="text-purple-400 font-bold">141</p></div>
-      <div class="bg-dark2 p-3 rounded text-center"><p class="text-sm">Đã rút</p><p class="text-gold font-bold">0k</p></div>
-    </div>
-    <div class="flex gap-2">
-      <input type="text" placeholder="Nhập Giftcode" class="flex-1 bg-gray-800 rounded px-3 py-2">
-      <button class="bg-blue px-4 rounded">Nhận</button>
-    </div>
-  </div>
+<div class="flex bg-dark2 border-b">
+  <button class="tab active" data-tab="profile">Hồ Sơ</button>
+  <button class="tab" data-tab="mine">Máy Đào</button>
+</div>
 
-  <!-- Nội dung Máy đào -->
-  <div id="tab-mine" class="p-4 hidden">
-    <div class="bg-dark2 rounded-xl p-4 mb-4">
-      <div class="flex justify-between items-center mb-2">
-        <span class="text-red-400 font-semibold">CẤP 1</span>
-        <span class="text-gold">0.000856 /giây</span>
-      </div>
-      <div class="w-full h-2 bg-gray-700 rounded-full mb-2"><div class="h-full bg-red-500 w-[15%]"></div></div>
-      <p class="text-sm text-gray-300">XP: 21/144</p>
-      <div class="my-8 text-center">
-        <div id="mine-output" class="text-5xl font-bold text-orange-400 mb-4">0.000000</div>
-        <button id="startMine" class="w-full bg-blue py-3 rounded-xl font-semibold">Khởi động máy đào</button>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-dark2 p-4 rounded text-center">
-        <p class="font-medium">Máy Sơ cấp</p>
-        <p class="text-gold">10.000</p>
-        <button class="w-full mt-2 bg-green-600 py-1.5 rounded">Chế tác</button>
-      </div>
-      <div class="bg-dark2 p-4 rounded text-center">
-        <p class="font-medium">Máy Trung cấp</p>
-        <p class="text-gold">20.000</p>
-        <button class="w-full mt-2 bg-blue-600 py-1.5 rounded">Chế tác</button>
-      </div>
-    </div>
-  </div>
+<div id="tab-profile" class="p-4">
+  <div class="bg-dark2 rounded-xl p-4 mb-4 grid grid-cols-2 gap-y-2"><span class="text-gray-300">Tên:</span><span>Duc</span><span class="text-gray-300">Ngày tham gia:</span><span>29/06/2026</span></div>
+  <div class="bg-dark2 rounded-xl p-6 text-center"><p class="text-gray-300">Số dư quặng</p><p class="text-4xl font-bold text-gold">2.469</p></div>
+</div>
 
-  <!-- Các tab khác (Giải trí, Mời bạn, Cửa hàng) tương tự -->
+<div id="tab-mine" class="p-4 hidden">
+  <div class="bg-dark2 rounded-xl p-4 text-center"><p class="text-red-400 font-semibold mb-2">CẤP 1 ⚡0.000856/giây</p><div id="so-quang" class="text-5xl font-bold text-orange-400 my-6">0.000000</div><button id="btn-dao" class="w-full bg-blue py-3 rounded-xl font-semibold">KHỞI ĐỘNG MÁY</button></div>
+</div>
 
-  <script>
-    // Chuyển tab
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active', 'border-b-2', 'border-blue', 'text-blue'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        tab.classList.add('active', 'border-b-2', 'border-blue', 'text-blue');
-        document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
-      });
-    });
+<script>
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('[id^=tab-]').forEach(x => x.classList.add('hidden'));
+  t.classList.add('active'); document.getElementById(`tab-${t.dataset.tab}`).classList.remove('hidden');
+}));
 
-    // Chạy máy đào demo
-    let mineRunning = false;
-    let mineVal = 0;
-    document.getElementById('startMine').addEventListener('click', () => {
-      if (!mineRunning) {
-        mineRunning = true;
-        setInterval(() => { mineVal += 0.000856; document.getElementById('mine-output').textContent = mineVal.toFixed(6); }, 1000);
-      }
-    });
-  </script>
-  <style>.tab {flex:1; padding:12px; text-align:center; color:#9CA3AF;}.tab.active {color:#3B82F6; font-weight:bold;}</style>
+let run = false, val = 0;
+document.getElementById('btn-dao').onclick = () => {
+  if(!run){ run=true; document.getElementById('btn-dao').textContent='DỪNG MÁY'; setInterval(()=>{val+=0.000856;document.getElementById('so-quang').textContent=val.toFixed(6)},1000); }
+}
+</script>
 </body>
 </html>
